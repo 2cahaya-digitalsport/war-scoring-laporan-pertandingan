@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laporan Pertandingan | 2 CAHAYA DIGITAL SCORING</title>
+
+    <!-- Tailwind CSS & Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* CSS LAPORAN PERTANDINGAN */
+        .report-page {
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            color: #000000;
+            font-family: 'Times New Roman', serif;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 10px;
+        }
+
+        .report-table th,
+        .report-table td {
+            border: 1px solid #000000;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 18px;
+            border-bottom: 3px double #000000;
+            padding-bottom: 10px;
+        }
+
+        .report-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 3px 0;
+        }
+
+        .report-subtitle {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .report-section-header {
+            font-weight: 900;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000000;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            padding-bottom: 2px;
+            font-size: 10px;
+            display: block;
+        }
+
+        .report-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .report-info-grid p {
+            margin: 2px 0;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: #ffffff !important;
+                height: auto !important;
+                width: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .report-scroll-area {
+                overflow: visible !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+            }
+            .report-page {
+                box-shadow: none !important;
+                margin: 0 auto !important;
+                width: 210mm !important;
+                min-height: 297mm !important;
+                padding: 15mm !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER KHUSUS HALAMAN LAPORAN PERTANDINGAN (TANPA MENU LAIN) -->
+    <header class="no-print bg-white px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm border-b border-slate-200 flex justify-between items-center gap-2 shrink-0 z-10">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-file-alt text-sm"></i>
+            </div>
+            <div class="min-w-0">
+                <h1 class="text-xs sm:text-sm font-black uppercase italic text-teal-600 truncate leading-tight">
+                    Laporan Pertandingan
+                </h1>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="conn-dot" class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span id="conn-text" class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">Menghubungkan...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <!-- Tombol Kembali ke Live (muncul saat membuka data dari folder) -->
+            <button type="button" id="btn-back-live" onclick="switchToLiveMode()" class="hidden bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-[9px] sm:text-[10px] px-2.5 sm:px-3 py-2 rounded-xl shadow-sm transition-all uppercase tracking-wider items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-broadcast-tower"></i>
+                <span class="hidden sm:inline">Live</span>
+            </button>
+
+            <!-- ICON FOLDER ARSIP PERTANDINGAN SELESAI (DIPERBAIKI) -->
+            <button type="button" onclick="openFolderModal()" title="Folder Arsip Pertandingan Selesai" class="group relative bg-gradient-to-b from-amber-50 to-amber-100/80 hover:from-amber-100 hover:to-amber-200/80 active:scale-95 border border-amber-300 text-amber-800 font-black text-xs px-2.5 sm:px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-inner shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fas fa-folder-open text-xs"></i>
+                </span>
+                <span class="hidden sm:inline text-[9px] sm:text-[10px] uppercase tracking-wider font-black">Folder Arsip</span>
+                <span id="folder-count-badge" class="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-amber-600 text-white text-[9px] font-black leading-none shadow-sm">0</span>
+            </button>
+
+            <!-- TOMBOL CETAK PDF -->
+            <button type="button" onclick="cetakPDF()" class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-black text-[9px] sm:text-[10px] px-3 sm:px-3.5 py-2 rounded-xl shadow-sm transition-all uppercase tracking-wider flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-print"></i>
+                <span>CETAK PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- BANNER INFO MODE ARSIP / LIVE -->
+    <div id="view-mode-banner" class="no-print hidden bg-amber-50 border-b border-amber-200 px-4 py-1.5 text-[9px] sm:text-[10px] font-black text-amber-800 uppercase tracking-wider flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2 truncate">
+            <i class="fas fa-folder-open text-amber-500"></i>
+            <span id="view-mode-label" class="truncate">Menampilkan Arsip Tersimpan</span>
+        </div>
+        <button type="button" onclick="switchToLiveMode()" class="text-emerald-700 hover:text-emerald-900 underline font-black shrink-0 cursor-pointer">
+            Kembali ke Live Realtime
+        </button>
+    </div>
+
+    <!-- AREA KONTEN LAPORAN A4 -->
+    <main class="report-scroll-area flex-1 overflow-auto p-3 sm:p-6 custom-scroll bg-slate-100">
+        <div id="report-content" class="report-page">
+            <div class="report-header">
+                <p class="report-title">LAPORAN HASIL PERTANDINGAN</p>
+                <p class="report-subtitle">KEJUARAAN PENCAK SILAT DIGITAL SCORING 2026</p>
+            </div>
+
+            <div class="report-info-grid">
+                <div>
+                    <p>Partai : <span id="rep-p-val">---</span></p>
+                    <p>Kategori : <span id="rep-k-val">---</span></p>
+                    <p>Golongan : <span id="rep-g-val">---</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p>Fase : <span id="rep-f-val">---</span></p>
+                    <p>Waktu Cetak : <span id="rep-w-val">---</span></p>
+                </div>
+            </div>
+
+            <span class="report-section-header">I. Ringkasan Hasil Akhir</span>
+            <table class="report-table">
+                <thead style="background: #f1f5f9;">
+                    <tr>
+                        <th>SUDUT</th>
+                        <th>NAMA ATLET</th>
+                        <th>KONTINGEN / PERGURUAN</th>
+                        <th>SKOR</th>
+                    </tr>
+                </thead>
+                <tbody id="report-summary-body">
+                    <tr>
+                        <td style="color:#1e40af; font-weight:bold;">SUDUT BIRU</td>
+                        <td>---</td>
+                        <td>---</td>
+                        <td style="font-weight:900; font-size:14px;">0</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#991b1b; font-weight:bold;">SUDUT MERAH</td>
+                        <td>---</td>
+                        <td>---</td>
+                        <td style="font-weight:900; font-size:14px;">0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <span class="report-section-header">II. Statistik Frekuensi Poin &amp; Sanksi</span>
+            <table class="report-table">
+                <thead style="background: #f1f5f9;">
+                    <tr>
+                        <th>PARAMETER TEKNIS</th>
+                        <th style="color: #1e40af;">SUDUT BIRU</th>
+                        <th style="color: #991b1b;">SUDUT MERAH</th>
+                    </tr>
+                </thead>
+                <tbody id="report-stats-body">
+                    <tr><td>FREKUENSI PUKULAN</td><td>0</td><td>0</td></tr>
+                    <tr><td>FREKUENSI TENDANGAN</td><td>0</td><td>0</td></tr>
+                    <tr><td>TEKNIK JATUHAN (+3)</td><td>0</td><td>0</td></tr>
+                    <tr><td>TOTAL SANKSI HUKUMAN</td><td>0</td><td>0</td></tr>
+                </tbody>
+            </table>
+
+            <span class="report-section-header">III. Detail Penilaian Per Juri</span>
+            <div id="report-juri-logs" style="margin-bottom: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <p style="font-weight:bold; font-size:9px; margin:0 0 3px 0;">DATA NILAI JURI 1 (DIVERIFIKASI SISTEM)</p>
+                    <table class="report-table">
+                        <thead style="background:#f8fafc;">
+                            <tr><th>SUDUT</th><th>BABAK 1</th><th>BABAK 2</th><th>BABAK 3</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="color:#1e40af; font-weight:bold;">BIRU</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                            <tr><td style="color:#991b1b; font-weight:bold;">MERAH</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <p style="font-weight:bold; font-size:9px; margin:0 0 3px 0;">DATA NILAI JURI 2 (DIVERIFIKASI SISTEM)</p>
+                    <table class="report-table">
+                        <thead style="background:#f8fafc;">
+                            <tr><th>SUDUT</th><th>BABAK 1</th><th>BABAK 2</th><th>BABAK 3</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="color:#1e40af; font-weight:bold;">BIRU</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                            <tr><td style="color:#991b1b; font-weight:bold;">MERAH</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <p style="font-weight:bold; font-size:9px; margin:0 0 3px 0;">DATA NILAI JURI 3 (DIVERIFIKASI SISTEM)</p>
+                    <table class="report-table">
+                        <thead style="background:#f8fafc;">
+                            <tr><th>SUDUT</th><th>BABAK 1</th><th>BABAK 2</th><th>BABAK 3</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="color:#1e40af; font-weight:bold;">BIRU</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                            <tr><td style="color:#991b1b; font-weight:bold;">MERAH</td><td>0</td><td>0</td><td>0</td><td style="font-weight:bold;">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <span class="report-section-header">IV. Log Sanksi &amp; Pelanggaran Pertandingan</span>
+            <div id="report-penalty-logs">
+                <table class="report-table">
+                    <thead>
+                        <tr style="background:#f8fafc;">
+                            <th>BABAK</th>
+                            <th>SUDUT</th>
+                            <th>JENIS PELANGGARAN / SANKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3">TIDAK ADA CATATAN PELANGGARAN</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 50px; display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; text-align: center;">
+                <div style="width: 180px; border-top: 1px solid #000000; padding-top: 5px;">
+                    SEKRETARIS PERTANDINGAN
+                    <div style="height: 45px;"></div>
+                    (....................................)
+                </div>
+                <div style="width: 180px; border-top: 1px solid #000000; padding-top: 5px;">
+                    KETUA PERTANDINGAN
+                    <div style="height: 45px;"></div>
+                    (....................................)
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL FOLDER ARSIP LAPORAN PERTANDINGAN -->
+    <div id="folder-modal" class="no-print fixed inset-0 z-50 hidden items-center justify-center p-2.5 sm:p-4">
+        <div onclick="closeFolderModal()" class="fixed inset-0 bg-slate-950/65 backdrop-blur-[2px]"></div>
+        <div class="relative bg-white w-full max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-10">
+            <!-- Header Modal Folder -->
+            <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
+                        <i class="fas fa-folder-open text-amber-400 text-base"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider truncate">Folder Arsip Laporan</h2>
+                        <p class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Tersimpan Otomatis Saat Partai Finish • 10 Nomor / Halaman</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeFolderModal()" aria-label="Tutup Folder" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700 shrink-0">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Search Bar Folder -->
+            <div class="p-2.5 sm:p-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row gap-2 shrink-0">
+                <div class="relative flex-1 min-w-0">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="folder-search" oninput="onSearchFolder()" placeholder="Cari partai, nama atlet, kontingen, kelas..." class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-teal-500">
+                </div>
+                <button type="button" onclick="clearAllFolder()" class="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[9px] font-black uppercase tracking-wider transition cursor-pointer shrink-0">
+                    <i class="fas fa-trash-alt mr-1"></i> Kosongkan
+                </button>
+            </div>
+
+            <!-- List Arsip Pertandingan -->
+            <div id="folder-list-body" class="flex-1 overflow-y-auto custom-scroll p-2.5 sm:p-4 bg-slate-50 space-y-2.5">
+                <!-- Dirender Dinamis -->
+            </div>
+
+            <!-- Pagination Bar (Otomatis setiap 10 nomor) -->
+            <div id="folder-pagination" class="hidden px-3 py-2 bg-slate-100 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <span id="folder-page-info" class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Menampilkan 1-10 dari 0
+                </span>
+                <div id="folder-page-buttons" class="flex items-center gap-1 flex-wrap">
+                    <!-- Tombol Pagination Dirender Dinamis -->
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                <button type="button" onclick="switchToLiveMode(); closeFolderModal();" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition cursor-pointer">
+                    <i class="fas fa-broadcast-tower mr-1"></i> Tampilkan Live Realtime
+                </button>
+                <button type="button" onclick="closeFolderModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT FIREBASE, AUTO-ARCHIVE FOLDER, PAGINATION & LAPORAN PERTANDINGAN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHIPab-S8DM2zR7Fd2SDjlELJHRPB8TkA",
+            authDomain: "warscoring-60650.firebaseapp.com",
+            databaseURL: "https://warscoring-60650-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "warscoring-60650",
+            storageBucket: "warscoring-60650.firebasestorage.app",
+            messagingSenderId: "782315540387",
+            appId: "1:782315540387:web:c0e9f78dfcbb3375719416"
+        };
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbRef = ref(database, 'pencak_scoring_state');
+        const folderDbRef = ref(database, 'pencak_laporan_folder');
+
+        const LOCAL_ARCHIVE_KEY = '2cahaya_laporan_folder_v1';
+        const LOCAL_CACHE_KEY = '2cahaya_live_match_cache_v1';
+        const FOLDER_PAGE_SIZE = 10;
+
+        const EMPTY_STATE = {
+            idx: 0,
+            bertandingIdx: -1,
+            matches: [],
+            merah: { juri: { j1: [0,0,0], j2: [0,0,0], j3: [0,0,0] }, penHistory: [], jat: 0, pukulanFreq: 0, tendanganFreq: 0, dis: false, ud: false, wmp: false },
+            biru: { juri: { j1: [0,0,0], j2: [0,0,0], j3: [0,0,0] }, penHistory: [], jat: 0, pukulanFreq: 0, tendanganFreq: 0, dis: false, ud: false, wmp: false }
+        };
+
+        window.state = structuredClone(EMPTY_STATE);
+
+        // State Folder Arsip, Pagination & Mode Tampilan
+        let savedReports = loadLocalJSON(LOCAL_ARCHIVE_KEY, {});
+        let liveMatchCache = loadLocalJSON(LOCAL_CACHE_KEY, {});
+        let selectedArchiveKey = null; // null = mode live realtime, string = melihat arsip dari folder
+        let currentFolderPage = 1;
+
+        function loadLocalJSON(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function saveLocalJSON(key, val) {
+            try {
+                localStorage.setItem(key, JSON.stringify(val));
+            } catch (e) {
+                console.warn('LocalStorage penuh/tidak tersedia:', e);
+            }
+        }
+
+        function escapeHTML(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toArr(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'object') return Object.values(val);
+            return [];
+        }
+
+        function cloneCorner(c) {
+            const src = c || {};
+            return {
+                juri: {
+                    j1: [Number(toArr(src.juri?.j1)[0]) || 0, Number(toArr(src.juri?.j1)[1]) || 0, Number(toArr(src.juri?.j1)[2]) || 0],
+                    j2: [Number(toArr(src.juri?.j2)[0]) || 0, Number(toArr(src.juri?.j2)[1]) || 0, Number(toArr(src.juri?.j2)[2]) || 0],
+                    j3: [Number(toArr(src.juri?.j3)[0]) || 0, Number(toArr(src.juri?.j3)[1]) || 0, Number(toArr(src.juri?.j3)[2]) || 0]
+                },
+                penHistory: toArr(src.penHistory).filter(Boolean).map(p => ({ ...p })),
+                jat: Number(src.jat) || 0,
+                pukulanFreq: Number(src.pukulanFreq) || 0,
+                tendanganFreq: Number(src.tendanganFreq) || 0,
+                dis: Boolean(src.dis),
+                ud: Boolean(src.ud),
+                wmp: Boolean(src.wmp)
+            };
+        }
+
+        function hasCornerActivity(c) {
+            if (!c) return false;
+            const jSum = ['j1', 'j2', 'j3'].reduce((acc, jk) => acc + toArr(c.juri?.[jk]).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+            return jSum !== 0 || (Number(c.jat) || 0) !== 0 || toArr(c.penHistory).length > 0 || (Number(c.pukulanFreq) || 0) !== 0 || (Number(c.tendanganFreq) || 0) !== 0 || c.dis || c.ud || c.wmp;
+        }
+
+        function makeSafeKey(str) {
+            return String(str || '').trim().toUpperCase().replace(/[.#$\[\]\/\s]+/g, '_').slice(0, 50) || 'EMPTY';
+        }
+
+        function buildArchiveKey(mb) {
+            return `P${Number(mb?.p) || 0}_${makeSafeKey(mb?.b)}_${makeSafeKey(mb?.m)}`;
+        }
+
+        function setConnectionStatus(online, text) {
+            const dot = document.getElementById('conn-dot');
+            const label = document.getElementById('conn-text');
+            if (dot) {
+                dot.className = online
+                    ? 'inline-block w-2 h-2 rounded-full bg-emerald-500'
+                    : 'inline-block w-2 h-2 rounded-full bg-amber-400';
+            }
+            if (label) {
+                label.innerText = text;
+            }
+        }
+
+        function calculateTotalFromCorner(sc) {
+            if (!sc || sc.dis || sc.ud || sc.wmp) return 0;
+
+            const j1 = toArr(sc.juri?.j1);
+            const j2 = toArr(sc.juri?.j2);
+            const j3 = toArr(sc.juri?.j3);
+
+            const j1T = j1.reduce((a, b) => a + (Number(b) || 0), 0);
+            const j2T = j2.reduce((a, b) => a + (Number(b) || 0), 0);
+            const j3T = j3.reduce((a, b) => a + (Number(b) || 0), 0);
+
+            const sorted = [j1T, j2T, j3T].sort((a, b) => a - b);
+            const tot = sorted[1] || 0;
+
+            const pMap = { teguran1: 1, teguran2: 2, peringatan1: 5, peringatan2: 10 };
+            let tp = 0;
+            toArr(sc.penHistory).forEach(i => {
+                tp += (pMap[i?.type] || 0);
+            });
+
+            return tot + (Number(sc.jat) || 0) - tp;
+        }
+
+        function getScoreDisplay(sc, numericScore) {
+            if (!sc) return numericScore;
+            if (sc.dis) return `${numericScore} (DISK)`;
+            if (sc.ud) return `${numericScore} (UD)`;
+            if (sc.wmp) return `${numericScore} (WMP)`;
+            return numericScore;
+        }
+
+        // ======================================================
+        // LOGIKA SIMPAN OTOMATIS KE FOLDER SAAT TOMBOL FINISH DIKLIK
+        // ======================================================
+        function processRealtimeArchive(state) {
+            if (!state) return;
+            const matches = toArr(state.matches);
+            const activeIdx = (typeof state.bertandingIdx === 'number' && state.bertandingIdx >= 0)
+                ? state.bertandingIdx
+                : (Number(state.idx) || 0);
+
+            // 1. Cache skor live untuk partai aktif sebelum berpindah partai
+            const activeMatch = matches[activeIdx];
+            if (activeMatch && (activeMatch.b || activeMatch.m)) {
+                const liveB = cloneCorner(state.biru);
+                const liveM = cloneCorner(state.merah);
+                if (activeMatch.status !== 'selesai' || hasCornerActivity(liveB) || hasCornerActivity(liveM)) {
+                    liveMatchCache[String(activeIdx)] = {
+                        p: activeMatch.p,
+                        b: activeMatch.b || '',
+                        m: activeMatch.m || '',
+                        biru: liveB,
+                        merah: liveM,
+                        updatedAt: Date.now()
+                    };
+                    saveLocalJSON(LOCAL_CACHE_KEY, liveMatchCache);
+                }
+            }
+
+            // 2. Deteksi partai yang selesai (tombol FINISH diklik pada Operator atau Dewan)
+            let archiveUpdated = false;
+            matches.forEach((mb, idx) => {
+                if (!mb || mb.status !== 'selesai') return;
+                if (!mb.b && !mb.m) return;
+                if (mb.b === 'BYE' || mb.m === 'BYE') return;
+
+                const archiveKey = buildArchiveKey(mb);
+                const existing = savedReports[archiveKey];
+
+                let detailBiru = null;
+                let detailMerah = null;
+                let hasDetail = false;
+
+                if (idx === activeIdx && (hasCornerActivity(state.biru) || hasCornerActivity(state.merah) || !existing?.hasDetail)) {
+                    detailBiru = cloneCorner(state.biru);
+                    detailMerah = cloneCorner(state.merah);
+                    hasDetail = hasCornerActivity(detailBiru) || hasCornerActivity(detailMerah);
+                } else if (liveMatchCache[String(idx)] && liveMatchCache[String(idx)].b === mb.b && liveMatchCache[String(idx)].m === mb.m) {
+                    const cached = liveMatchCache[String(idx)];
+                    detailBiru = cloneCorner(cached.biru);
+                    detailMerah = cloneCorner(cached.merah);
+                    hasDetail = hasCornerActivity(detailBiru) || hasCornerActivity(detailMerah);
+                } else if (existing?.hasDetail) {
+                    return;
+                } else {
+                    detailBiru = cloneCorner(null);
+                    detailMerah = cloneCorner(null);
+                    hasDetail = false;
+                }
+
+                if (existing && existing.hasDetail && !hasDetail) return;
+                if (existing &&
+                    existing.match?.totalB === mb.totalB &&
+                    existing.match?.totalM === mb.totalM &&
+                    existing.match?.winnerSide === mb.winnerSide &&
+                    existing.hasDetail === hasDetail &&
+                    JSON.stringify(existing.biru) === JSON.stringify(detailBiru) &&
+                    JSON.stringify(existing.merah) === JSON.stringify(detailMerah)) {
+                    return;
+                }
+
+                const entry = {
+                    key: archiveKey,
+                    savedAt: existing?.savedAt || Date.now(),
+                    updatedAt: Date.now(),
+                    hasDetail,
+                    match: {
+                        p: mb.p || idx + 1,
+                        cat: mb.cat || '-',
+                        kelas: mb.kelas || '-',
+                        gender: mb.gender || '-',
+                        fase: mb.fase || '-',
+                        b: mb.b || '---',
+                        kb: mb.kb || '---',
+                        m: mb.m || '---',
+                        km: mb.km || '---',
+                        status: mb.status || 'selesai',
+                        totalB: Number(mb.totalB ?? calculateTotalFromCorner(detailBiru)) || 0,
+                        totalM: Number(mb.totalM ?? calculateTotalFromCorner(detailMerah)) || 0,
+                        winner: mb.winner || '',
+                        winnerSide: mb.winnerSide || ''
+                    },
+                    biru: detailBiru,
+                    merah: detailMerah
+                };
+
+                savedReports[archiveKey] = entry;
+                archiveUpdated = true;
+
+                set(ref(database, `pencak_laporan_folder/${archiveKey}`), entry).catch(() => {});
+            });
+
+            if (archiveUpdated) {
+                saveLocalJSON(LOCAL_ARCHIVE_KEY, savedReports);
+                updateFolderBadge();
+                if (!document.getElementById('folder-modal').classList.contains('hidden')) {
+                    renderFolderList();
+                }
+            }
+        }
+
+        function updateFolderBadge() {
+            const badge = document.getElementById('folder-count-badge');
+            if (badge) {
+                badge.innerText = Object.keys(savedReports).length;
+            }
+        }
+
+        // ======================================================
+        // RENDER LAPORAN (MENDUKUNG MODE LIVE MAUPUN MODE ARSIP FOLDER)
+        // ======================================================
+        function renderLaporan() {
+            const banner = document.getElementById('view-mode-banner');
+            const bannerLabel = document.getElementById('view-mode-label');
+            const btnBackLive = document.getElementById('btn-back-live');
+
+            let mb = {};
+            let sB = EMPTY_STATE.biru;
+            let sM = EMPTY_STATE.merah;
+            let overrideTotalB = null;
+            let overrideTotalM = null;
+            let waktuStr = new Date().toLocaleString('id-ID');
+
+            if (selectedArchiveKey && savedReports[selectedArchiveKey]) {
+                const arch = savedReports[selectedArchiveKey];
+                mb = arch.match || {};
+                sB = arch.biru || EMPTY_STATE.biru;
+                sM = arch.merah || EMPTY_STATE.merah;
+                if (!arch.hasDetail) {
+                    overrideTotalB = mb.totalB;
+                    overrideTotalM = mb.totalM;
+                }
+                waktuStr = new Date(arch.savedAt || Date.now()).toLocaleString('id-ID');
+
+                if (banner && bannerLabel) {
+                    banner.classList.remove('hidden');
+                    banner.classList.add('flex');
+                    bannerLabel.innerText = `Arsip Tersimpan: Partai ${mb.p || '-'} (${mb.b || '-'} vs ${mb.m || '-'})`;
+                }
+                if (btnBackLive) {
+                    btnBackLive.classList.remove('hidden');
+                    btnBackLive.classList.add('flex');
+                }
+            } else {
+                selectedArchiveKey = null;
+                const currentState = window.state || EMPTY_STATE;
+                const matches = toArr(currentState.matches);
+                const activeIdx = (typeof currentState.bertandingIdx === 'number' && currentState.bertandingIdx >= 0)
+                    ? currentState.bertandingIdx
+                    : (Number(currentState.idx) || 0);
+
+                mb = matches[activeIdx] || matches[0] || {};
+                sM = currentState.merah || EMPTY_STATE.merah;
+                sB = currentState.biru || EMPTY_STATE.biru;
+
+                if (banner) {
+                    banner.classList.add('hidden');
+                    banner.classList.remove('flex');
+                }
+                if (btnBackLive) {
+                    btnBackLive.classList.add('hidden');
+                    btnBackLive.classList.remove('flex');
+                }
+            }
+
+            document.getElementById('rep-p-val').innerText = mb.p || '---';
+            document.getElementById('rep-k-val').innerText = mb.cat || '---';
+            document.getElementById('rep-g-val').innerText = (mb.kelas || mb.gender) ? `${mb.kelas || '-'} - ${mb.gender || '-'}` : '---';
+            document.getElementById('rep-f-val').innerText = mb.fase || '---';
+            document.getElementById('rep-w-val').innerText = waktuStr;
+
+            const tb = (overrideTotalB !== null && overrideTotalB !== undefined) ? overrideTotalB : calculateTotalFromCorner(sB);
+            const tm = (overrideTotalM !== null && overrideTotalM !== undefined) ? overrideTotalM : calculateTotalFromCorner(sM);
+            const dispB = getScoreDisplay(sB, tb);
+            const dispM = getScoreDisplay(sM, tm);
+
+            const winTagB = (mb.status === 'selesai' && mb.winnerSide === 'biru') ? ' ★ PEMENANG' : '';
+            const winTagM = (mb.status === 'selesai' && mb.winnerSide === 'merah') ? ' ★ PEMENANG' : '';
+
+            document.getElementById('report-summary-body').innerHTML = `
+                <tr>
+                    <td style="color:#1e40af; font-weight:bold;">SUDUT BIRU${winTagB}</td>
+                    <td>${escapeHTML(mb.b || '---')}</td>
+                    <td>${escapeHTML(mb.kb || '---')}</td>
+                    <td style="font-weight:900; font-size:14px;">${escapeHTML(dispB)}</td>
+                </tr>
+                <tr>
+                    <td style="color:#991b1b; font-weight:bold;">SUDUT MERAH${winTagM}</td>
+                    <td>${escapeHTML(mb.m || '---')}</td>
+                    <td>${escapeHTML(mb.km || '---')}</td>
+                    <td style="font-weight:900; font-size:14px;">${escapeHTML(dispM)}</td>
+                </tr>
+            `;
+
+            const penB = toArr(sB.penHistory);
+            const penM = toArr(sM.penHistory);
+
+            document.getElementById('report-stats-body').innerHTML = `
+                <tr>
+                    <td>FREKUENSI PUKULAN</td>
+                    <td>${Number(sB.pukulanFreq) || 0}</td>
+                    <td>${Number(sM.pukulanFreq) || 0}</td>
+                </tr>
+                <tr>
+                    <td>FREKUENSI TENDANGAN</td>
+                    <td>${Number(sB.tendanganFreq) || 0}</td>
+                    <td>${Number(sM.tendanganFreq) || 0}</td>
+                </tr>
+                <tr>
+                    <td>TEKNIK JATUHAN (+3)</td>
+                    <td>${Math.floor((Number(sB.jat) || 0) / 3)}</td>
+                    <td>${Math.floor((Number(sM.jat) || 0) / 3)}</td>
+                </tr>
+                <tr>
+                    <td>TOTAL SANKSI HUKUMAN</td>
+                    <td>${penB.length}</td>
+                    <td>${penM.length}</td>
+                </tr>
+            `;
+
+            let juriLogHtml = '';
+            ['j1', 'j2', 'j3'].forEach((j, idx) => {
+                const bRaw = toArr(sB.juri?.[j]);
+                const mRaw = toArr(sM.juri?.[j]);
+                const bP = [Number(bRaw[0]) || 0, Number(bRaw[1]) || 0, Number(bRaw[2]) || 0];
+                const mP = [Number(mRaw[0]) || 0, Number(mRaw[1]) || 0, Number(mRaw[2]) || 0];
+
+                juriLogHtml += `
+                    <div style="margin-bottom: 10px;">
+                        <p style="font-weight:bold; font-size:9px; margin:0 0 3px 0;">DATA NILAI JURI ${idx + 1} (DIVERIFIKASI SISTEM)</p>
+                        <table class="report-table">
+                            <thead style="background:#f8fafc;">
+                                <tr>
+                                    <th>SUDUT</th>
+                                    <th>BABAK 1</th>
+                                    <th>BABAK 2</th>
+                                    <th>BABAK 3</th>
+                                    <th>TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="color:#1e40af; font-weight:bold;">BIRU</td>
+                                    <td>${bP[0]}</td>
+                                    <td>${bP[1]}</td>
+                                    <td>${bP[2]}</td>
+                                    <td style="font-weight:bold;">${bP.reduce((a, b) => a + b, 0)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#991b1b; font-weight:bold;">MERAH</td>
+                                    <td>${mP[0]}</td>
+                                    <td>${mP[1]}</td>
+                                    <td>${mP[2]}</td>
+                                    <td style="font-weight:bold;">${mP.reduce((a, b) => a + b, 0)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            document.getElementById('report-juri-logs').innerHTML = juriLogHtml;
+
+            const combinePen = [];
+            penB.forEach(p => { if (p) combinePen.push({ ...p, s: 'BIRU', color: '#1e40af' }); });
+            penM.forEach(p => { if (p) combinePen.push({ ...p, s: 'MERAH', color: '#991b1b' }); });
+            combinePen.sort((a, b) => (Number(a.round) || 0) - (Number(b.round) || 0));
+
+            let penaltyLogHtml = `
+                <table class="report-table">
+                    <thead>
+                        <tr style="background:#f8fafc;">
+                            <th>BABAK</th>
+                            <th>SUDUT</th>
+                            <th>JENIS PELANGGARAN / SANKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            if (combinePen.length === 0) {
+                penaltyLogHtml += '<tr><td colspan="3">TIDAK ADA CATATAN PELANGGARAN</td></tr>';
+            } else {
+                combinePen.forEach(p => {
+                    penaltyLogHtml += `
+                        <tr>
+                            <td>${escapeHTML(p.round ?? '-')}</td>
+                            <td style="color:${p.color}; font-weight:bold;">${p.s}</td>
+                            <td>${escapeHTML(String(p.type || '-').toUpperCase())}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            penaltyLogHtml += '</tbody></table>';
+            document.getElementById('report-penalty-logs').innerHTML = penaltyLogHtml;
+        }
+
+        // ======================================================
+        // KONTROL FOLDER ARSIP, PAGINATION & CETAK PDF PER KOLOM
+        // ======================================================
+        window.openFolderModal = function() {
+            const modal = document.getElementById('folder-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            renderFolderList();
+        };
+
+        window.closeFolderModal = function() {
+            const modal = document.getElementById('folder-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.onSearchFolder = function() {
+            currentFolderPage = 1;
+            renderFolderList();
+        };
+
+        window.goToFolderPage = function(page) {
+            currentFolderPage = Math.max(1, Number(page) || 1);
+            renderFolderList();
+            const body = document.getElementById('folder-list-body');
+            if (body) body.scrollTop = 0;
+        };
+
+        window.loadArchivedReport = function(key) {
+            if (!savedReports[key]) return;
+            selectedArchiveKey = key;
+            closeFolderModal();
+            renderLaporan();
+        };
+
+        window.cetakArchivedPDF = function(key, e) {
+            if (e) e.stopPropagation();
+            if (!savedReports[key]) return;
+            selectedArchiveKey = key;
+            closeFolderModal();
+            renderLaporan();
+            setTimeout(() => {
+                window.print();
+            }, 150);
+        };
+
+        window.switchToLiveMode = function() {
+            selectedArchiveKey = null;
+            renderLaporan();
+        };
+
+        window.deleteArchivedReport = function(key, e) {
+            if (e) e.stopPropagation();
+            if (!confirm('Hapus arsip laporan partai ini dari folder?')) return;
+            delete savedReports[key];
+            saveLocalJSON(LOCAL_ARCHIVE_KEY, savedReports);
+            remove(ref(database, `pencak_laporan_folder/${key}`)).catch(() => {});
+            if (selectedArchiveKey === key) {
+                selectedArchiveKey = null;
+                renderLaporan();
+            }
+            updateFolderBadge();
+            renderFolderList();
+        };
+
+        window.clearAllFolder = function() {
+            if (Object.keys(savedReports).length === 0) return;
+            if (!confirm('Kosongkan seluruh arsip laporan di dalam folder?')) return;
+            savedReports = {};
+            saveLocalJSON(LOCAL_ARCHIVE_KEY, savedReports);
+            remove(folderDbRef).catch(() => {});
+            selectedArchiveKey = null;
+            currentFolderPage = 1;
+            updateFolderBadge();
+            renderFolderList();
+            renderLaporan();
+        };
+
+        function renderPaginationControls(totalItems, totalPages, startIdx, endIdx) {
+            const pagContainer = document.getElementById('folder-pagination');
+            const pageInfo = document.getElementById('folder-page-info');
+            const pageButtons = document.getElementById('folder-page-buttons');
+
+            if (!pagContainer || !pageInfo || !pageButtons) return;
+
+            if (totalItems === 0) {
+                pagContainer.classList.add('hidden');
+                pagContainer.classList.remove('flex');
+                return;
+            }
+
+            pagContainer.classList.remove('hidden');
+            pagContainer.classList.add('flex');
+
+            pageInfo.innerText = `No. ${startIdx + 1}–${endIdx} dari ${totalItems} Laporan (Hal ${currentFolderPage}/${totalPages})`;
+
+            let btnsHtml = '';
+
+            // Tombol Sebelumnya
+            const prevDisabled = currentFolderPage <= 1;
+            btnsHtml += `
+                <button type="button" ${prevDisabled ? 'disabled' : `onclick="goToFolderPage(${currentFolderPage - 1})"`}
+                    class="px-2 py-1 rounded-lg text-[9px] font-black uppercase border transition ${prevDisabled ? 'bg-slate-200 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300 cursor-pointer'}">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+
+            // Hitung rentang tombol halaman yang tampil
+            const pages = [];
+            for (let p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= currentFolderPage - 1 && p <= currentFolderPage + 1)) {
+                    pages.push(p);
+                } else if (pages[pages.length - 1] !== '...') {
+                    pages.push('...');
+                }
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    btnsHtml += `<span class="px-1 text-[10px] font-bold text-slate-400">...</span>`;
+                } else if (p === currentFolderPage) {
+                    btnsHtml += `
+                        <button type="button" class="min-w-[26px] h-[26px] px-1.5 rounded-lg text-[10px] font-black bg-teal-600 text-white border border-teal-600 shadow-sm">
+                            ${p}
+                        </button>
+                    `;
+                } else {
+                    btnsHtml += `
+                        <button type="button" onclick="goToFolderPage(${p})" class="min-w-[26px] h-[26px] px-1.5 rounded-lg text-[10px] font-black bg-white hover:bg-teal-50 text-slate-700 border border-slate-300 cursor-pointer transition">
+                            ${p}
+                        </button>
+                    `;
+                }
+            });
+
+            // Tombol Berikutnya
+            const nextDisabled = currentFolderPage >= totalPages;
+            btnsHtml += `
+                <button type="button" ${nextDisabled ? 'disabled' : `onclick="goToFolderPage(${currentFolderPage + 1})"`}
+                    class="px-2 py-1 rounded-lg text-[9px] font-black uppercase border transition ${nextDisabled ? 'bg-slate-200 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300 cursor-pointer'}">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+
+            pageButtons.innerHTML = btnsHtml;
+        }
+
+        window.renderFolderList = function() {
+            const body = document.getElementById('folder-list-body');
+            const searchEl = document.getElementById('folder-search');
+            const keyword = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+            const items = Object.values(savedReports).sort((a, b) => {
+                const timeDiff = (Number(b.savedAt) || 0) - (Number(a.savedAt) || 0);
+                if (timeDiff !== 0) return timeDiff;
+                return (Number(b.match?.p) || 0) - (Number(a.match?.p) || 0);
+            }).filter(item => {
+                if (!keyword) return true;
+                const m = item.match || {};
+                const pool = `${m.p} ${m.fase} ${m.cat} ${m.kelas} ${m.gender} ${m.b} ${m.kb} ${m.m} ${m.km}`.toLowerCase();
+                return pool.includes(keyword);
+            });
+
+            if (items.length === 0) {
+                renderPaginationControls(0, 1, 0, 0);
+                body.innerHTML = `
+                    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+                        <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                            <i class="fas fa-folder-open text-2xl text-amber-400"></i>
+                        </div>
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-500">Belum ada laporan tersimpan</p>
+                        <p class="text-[9px] font-semibold mt-1">Nilai akan tersimpan otomatis ke folder saat tombol FINISH diklik pada Operator atau Dewan.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Hitung Pagination (otomatis setiap 10 nomor)
+            const totalItems = items.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / FOLDER_PAGE_SIZE));
+            if (currentFolderPage > totalPages) currentFolderPage = totalPages;
+            if (currentFolderPage < 1) currentFolderPage = 1;
+
+            const startIdx = (currentFolderPage - 1) * FOLDER_PAGE_SIZE;
+            const endIdx = Math.min(startIdx + FOLDER_PAGE_SIZE, totalItems);
+            const pagedItems = items.slice(startIdx, endIdx);
+
+            renderPaginationControls(totalItems, totalPages, startIdx, endIdx);
+
+            body.innerHTML = pagedItems.map((item, idx) => {
+                const nomorUrut = startIdx + idx + 1;
+                const m = item.match || {};
+                const isSelected = selectedArchiveKey === item.key;
+                const bScore = item.hasDetail ? calculateTotalFromCorner(item.biru) : (m.totalB || 0);
+                const mScore = item.hasDetail ? calculateTotalFromCorner(item.merah) : (m.totalM || 0);
+                const winB = m.winnerSide === 'biru';
+                const winM = m.winnerSide === 'merah';
+                const savedTime = new Date(item.savedAt || Date.now()).toLocaleString('id-ID');
+
+                return `
+                    <div onclick="loadArchivedReport('${escapeHTML(item.key)}')" class="bg-white rounded-xl border-2 ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-slate-200 hover:border-amber-400'} p-3 shadow-sm transition cursor-pointer">
+                        <div class="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100 flex-wrap">
+                            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span class="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase">No. ${nomorUrut}</span>
+                                <span class="bg-slate-800 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase">Partai ${escapeHTML(m.p)}</span>
+                                <span class="text-[9px] font-extrabold text-slate-600 uppercase truncate">${escapeHTML(m.fase)} • ${escapeHTML(m.kelas)} ${escapeHTML(m.cat)} ${escapeHTML(m.gender)}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[8px] font-bold text-slate-400 hidden sm:inline">${escapeHTML(savedTime)}</span>
+                                <button type="button" onclick="cetakArchivedPDF('${escapeHTML(item.key)}', event)" title="Cetak Laporan PDF" class="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm transition cursor-pointer">
+                                    <i class="fas fa-print text-[10px]"></i>
+                                    <span>Cetak PDF</span>
+                                </button>
+                                <button type="button" onclick="deleteArchivedReport('${escapeHTML(item.key)}', event)" title="Hapus" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition cursor-pointer">
+                                    <i class="fas fa-trash text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 min-w-0">
+                                <div class="text-[10px] font-black text-blue-800 uppercase truncate">
+                                    ${winB ? '<i class="fas fa-crown text-amber-500 mr-1"></i>' : ''}${escapeHTML(m.b)}
+                                </div>
+                                <div class="text-[8px] font-bold text-blue-500 uppercase truncate">${escapeHTML(m.kb)}</div>
+                            </div>
+
+                            <div class="flex items-center gap-1 font-black text-xs shrink-0">
+                                <span class="bg-blue-600 text-white px-2 py-1 rounded min-w-[26px] text-center">${escapeHTML(bScore)}</span>
+                                <span class="text-slate-300">-</span>
+                                <span class="bg-red-600 text-white px-2 py-1 rounded min-w-[26px] text-center">${escapeHTML(mScore)}</span>
+                            </div>
+
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-2 min-w-0 text-right">
+                                <div class="text-[10px] font-black text-red-800 uppercase truncate">
+                                    ${escapeHTML(m.m)}${winM ? '<i class="fas fa-crown text-amber-500 ml-1"></i>' : ''}
+                                </div>
+                                <div class="text-[8px] font-bold text-red-500 uppercase truncate">${escapeHTML(m.km)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.cetakPDF = function() {
+            window.print();
+        };
+
+        // Render awal langsung menampilkan seluruh tabel & jumlah folder
+        updateFolderBadge();
+        renderLaporan();
+
+        // Dengarkan arsip folder dari Firebase agar sinkron antar perangkat
+        onValue(folderDbRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const remoteFolder = snapshot.val() || {};
+                Object.keys(remoteFolder).forEach(k => {
+                    const remoteItem = remoteFolder[k];
+                    const localItem = savedReports[k];
+                    if (!localItem || (remoteItem.hasDetail && !localItem.hasDetail) || (Number(remoteItem.updatedAt) || 0) > (Number(localItem.updatedAt) || 0)) {
+                        savedReports[k] = remoteItem;
+                    }
+                });
+                saveLocalJSON(LOCAL_ARCHIVE_KEY, savedReports);
+                updateFolderBadge();
+                if (!document.getElementById('folder-modal').classList.contains('hidden')) {
+                    renderFolderList();
+                }
+                if (selectedArchiveKey) {
+                    renderLaporan();
+                }
+            }
+        });
+
+        // Dengarkan state realtime pertandingan dari Firebase
+        onValue(dbRef, (snapshot) => {
+            if (snapshot.exists()) {
+                window.state = snapshot.val();
+                processRealtimeArchive(window.state);
+                const isLive = typeof window.state.bertandingIdx === 'number' && window.state.bertandingIdx >= 0;
+                setConnectionStatus(true, isLive ? 'Online Realtime (Berlangsung)' : 'Online Realtime (Menunggu)');
+                if (!selectedArchiveKey) {
+                    renderLaporan();
+                }
+            } else {
+                window.state = structuredClone(EMPTY_STATE);
+                setConnectionStatus(false, 'Menunggu Pertandingan');
+                if (!selectedArchiveKey) {
+                    renderLaporan();
+                }
+            }
+        }, (error) => {
+            console.error(error);
+            setConnectionStatus(false, 'Gagal Terhubung');
+            if (!selectedArchiveKey) {
+                renderLaporan();
+            }
+        });
+    </script>
+</body>
+</html>
